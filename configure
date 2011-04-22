@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ ! $(gem query --local) =~ mysql ]]; then
+	gksu gem install mysql
+fi
+cd ~/cafe_grader/cafeprompt
+mkdir solution
