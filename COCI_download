@@ -68,7 +68,7 @@ def process(path, cafe_path, task_path)
 		FileUtils.mv(file, path + "/#{count}.sol")
 	end
 	prob_name = File.basename(path)
-	absolute_prob = cafe_path + "/pack/#{prob_name}"
+	absolute_prob = cafe_path + "/problemset/#{prob_name}"
 	FileUtils.mv(path, absolute_prob)
 	FileUtils.cp(task_path, absolute_prob + "/#{prob_name}.pdf")
 end

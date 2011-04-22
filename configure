@@ -5,3 +5,4 @@ if [[ ! $(gem query --local) =~ mysql ]]; then
 fi
 cd ~/cafe_grader/cafeprompt
 mkdir solution
+mkdir pack
