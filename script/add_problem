@@ -1,0 +1,71 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'mysql'
+
+def find_info(title, data)
+	if data == nil
+		return nil
+	end
+	data.each_line do |s|
+		words = s.split
+		if words[0] =~ title
+			return words[1]
+		end
+	end
+	return nil
+end
+
+def mysql_connect(database)
+	db = find_info(/^database:/, database)
+	username = find_info(/^username:/, database)
+	password = find_info(/^password:/, database)
+	return Mysql.new('localhost', username, password, db)
+end
+
+def get_name(problem, dir)
+	return problem if !FileTest.exist?("#{dir}/#{problem}")
+	ex = 2
+	while FileTest.exist?("#{dir}/#{problem}_#{ex}")
+		ex += 1
+	end
+	return "#{problem}_#{ex}"
+end
+
+def process
+end
+
+########################################################################
+
+cafeprompt_dir = File.expand_path(File.dirname(__FILE__) + '/..')
+
+path_fp = File.new(cafeprompt_dir + '/config/path')
+path_content = path_fp.read
+path_fp.close
+
+cafe_dir = find_info(/^cafegrader:/, path_content)
+database_fp = File.new(cafe_dir + '/web/config/database.yml')
+database_content = database_fp.read
+database_fp.close
+conn = mysql_connect(database_content)
+
+problems = Dir[cafeprompt_dir + '/problemset/*']
+
+FileUtils.cd(cafe_dir + '/judge')
+
+problems.each do |s|
+	problem = File.basename(s)
+	p_new = get_name(problem, cafe_dir + '/judge/ev')
+	conn.query("INSERT INTO problems(name, full_name, full_score, \
+date_added, available, test_allowed, output_only, \
+description_filename) VALUES('#{p_new}', '#{p_new}', '100', \
+'#{Time.new.strftime("%Y-%m-%d")}', '1', '1', '0', '#{problem}.pdf');");
+	id = conn.query("SELECT id FROM problems WHERE name = \
+'#{p_new}'").fetch_row[0]
+	FileUtils.mkdir_p("#{cafe_dir}/web/data/tasks/#{id}")
+	FileUtils.mv("#{s}/#{problem}.pdf", \
+"#{cafe_dir}/web/data/tasks/#{id}")
+	`#{cafe_dir}/judge/scripts/import_problem #{p_new} #{s} \
+text -t 1 -m 32`
+end
+conn.close

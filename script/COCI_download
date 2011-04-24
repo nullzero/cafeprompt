@@ -1,0 +1,121 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+
+def error
+	abort('Error')
+end
+
+def read_contest_dat(cafeprompt_dir, year, contest)
+	config_dir = cafeprompt_dir + '/config/COCI'
+	return nil if !FileTest.exist?("#{config_dir}/#{year}")
+	dat_fp = File.new("#{config_dir}/#{year}")
+	data = dat_fp.read
+	dat_fp.close
+	h = {}
+	data.each_line do |s|
+		words = s.split
+		h[ words[0] ] = words[1]
+	end
+	h['year:'] = year
+	h['contest:'] = contest
+	return h
+end
+
+def validate(info)
+	contest = info['contest:']
+	if !info.has_key?(contest + ':')
+		contest = contest.to_i
+		return false if contest < 1
+		return false if info['status:'] == 'fin' &&
+						info['allcontest:'].to_i < contest
+		return false if info['status:'] != 'fin' &&
+						info['status:'].to_i < contest
+		contest = 'contest' + contest
+	else
+		return false if info[contest + ':'] != 'true'
+	end
+	return true
+end
+
+def wget(url)
+	sname = File.basename(url)
+	command = "wget #{url} 2>&1 | sed -u 's/.* \\([0-9]\\+%\\)\\ \
+\\+\\([0-9.]\\+.\\)\\(.*\\)/\\1\\n# Downloading at \\2\\/s, ETA \\3/' \
+| zenity --width=400 --progress --title=\"Downloading #{sname}\" \
+--auto-close --no-cancel"
+	`#{command}`
+end
+
+def download(info)
+	year = info['year:'].to_i
+	contest = info['contest:']
+	if info[':status' != 'finished']
+		wget("http://hsin.hr/coci/#{contest}_solutions.zip")
+		wget("http://hsin.hr/coci/#{contest}_testdata.zip")
+		wget("http://hsin.hr/coci/#{contest}_tasks.pdf")
+	else
+		wget("http://hsin.hr/coci/archive/#{year}_#{year+1}/#{contest}_solutions.zip")
+		wget("http://hsin.hr/coci/archive/#{year}_#{year+1}/#{contest}_testdata.zip")
+		wget("http://hsin.hr/coci/archive/#{year}_#{year+1}/#{contest}_tasks.pdf")
+	end
+end
+
+def process(path, cafeprompt_dir, task_path)
+	input = Dir[path + '/*.in.*']
+	input.sort!
+	count = 0
+	input.each do |file|
+		count += 1
+		FileUtils.mv(file, "#{path}/#{count}.in")
+	end
+	output = Dir[path + '/*.out.*']
+	output.sort!
+	count = 0
+	output.each do |file|
+		count += 1
+		FileUtils.mv(file, "#{path}/#{count}.sol")
+	end
+	prob_name = File.basename(path)
+	absolute_prob = "#{cafeprompt_dir}/problemset/#{prob_name}"
+	FileUtils.mv(path, absolute_prob)
+	FileUtils.cp(task_path, "#{absolute_prob}/#{prob_name}.pdf")
+end
+
+########################################################################
+
+cafeprompt_dir = File.expand_path(File.dirname(__FILE__) + '/..')
+current_dir = '/tmp/cafeprompt'
+FileUtils.mkdir_p(current_dir)
+FileUtils.cd(current_dir)
+year = "#{ARGV[0]}"
+contest = "#{ARGV[1]}"
+error if !(year =~ /^[0-9]+/)
+error if !(info = read_contest_dat(cafeprompt_dir, year, contest))
+error if !validate(info)
+download(info)
+task_path = "#{current_dir}/#{contest}_tasks.pdf"
+solution_path = "#{current_dir}/#{contest}_solutions.zip"
+FileUtils.mv(solution_path, 
+			"#{cafeprompt_dir}/solution/#{year}.#{contest}.zip")
+testdata_zip = "#{current_dir}/#{contest}_testdata.zip"
+testdata_path = nil
+`unzip #{testdata_zip}`
+if info['sample:'] == 'yes'
+	allfiles = Dir[current_dir + '/*']
+	allfiles.each do |f|
+		if FileTest.directory?(f) && f =~ /official/
+			testdata_path = "#{current_dir}/#{f}"
+			break
+		end
+	end
+else
+	testdata_path = current_dir
+end
+allproblems = Dir[testdata_path + '/*']
+allproblems.each do |f|
+	if FileTest.directory?(f)
+		process(f, cafeprompt_dir, task_path)
+	end
+end
+FileUtils.remove_dir(current_dir)

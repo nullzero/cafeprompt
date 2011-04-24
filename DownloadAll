@@ -1,0 +1,13 @@
+#!/bin/bash
+
+current_dir=$(dirname $0)
+for i in {2006..2010}; do
+	for j in {1..7}; do
+		$current_dir/script/COCI_download $i $j
+		$current_dir/script/add_problem
+	done
+	$current_dir/script/COCI_download $i regional
+	$current_dir/script/add_problem
+	$current_dir/script/COCI_download $i olympiad
+	$current_dir/script/add_problem
+done

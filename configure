@@ -1,8 +1,20 @@
 #!/bin/bash
 
-if [[ ! $(gem query --local) =~ mysql ]]; then
+setting(){
+	mkdir $current_dir/solution
+	mkdir $current_dir/problemset
+	mkdir $current_dir/config
+	mv /tmp/cafe_path $current_dir/config/path
+}
+
+gemsql(){
+	yes | zenity --progress --width 350 --pulsate --text=\
+"Downloading mysql
+" --title="cafeprompt" --no-cancel &
 	gksu gem install mysql
-fi
-cd ~/cafe_grader/cafeprompt
-mkdir solution
-mkdir pack
+	killall zenity
+}
+
+current_dir=$(dirname $0)
+setting
+[[ ! ( "$(gem query --local)" =~ "mysql" ) ]] && gemsql
