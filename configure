@@ -8,6 +8,7 @@ setting(){
 }
 
 gemsql(){
+	[[  "$(gem query --local)" =~ "mysql" ]] && return
 	yes | zenity --progress --width 350 --pulsate --text=\
 "Downloading mysql
 " --title="cafeprompt" --no-cancel &
@@ -17,4 +18,4 @@ gemsql(){
 
 current_dir=$(dirname $0)
 setting
-[[ ! ( "$(gem query --local)" =~ "mysql" ) ]] && gemsql
+gemsql
