@@ -30,7 +30,6 @@ description_filename) VALUES('#{p_new}', '#{p_new}', '100', \
 	id = conn.query("SELECT id FROM problems WHERE name = \
 '#{p_new}'").fetch_row[0]
 	FileUtils.mkdir_p("#{cafe_dir}/web/data/tasks/#{id}")
-	puts "#{s}/#{problem}.pdf to #{cafe_dir}/web/data/tasks/#{id}/#{p_new}.pdf"
 	FileUtils.cp("#{s}/#{problem}.pdf", \
 "#{cafe_dir}/web/data/tasks/#{id}/#{p_new}.pdf")
 	`#{cafe_dir}/judge/scripts/import_problem #{p_new} #{s} \
