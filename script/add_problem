@@ -17,22 +17,17 @@ end
 
 cafeprompt_dir, path_config = Utility.initial(__FILE__)
 cafe_dir = path_config['cafegrader:']
-conn = Utility.mysql_connect(cafe_dir)
 problems = Dir[cafeprompt_dir + '/problemset/*']
 FileUtils.cd(cafe_dir + '/judge')
+sqlgrader = SqlGrader(cafe_dir)
 problems.each do |s|
 	problem = File.basename(s)
 	p_new = get_name(problem, cafe_dir + '/judge/ev')
-	conn.query("INSERT INTO problems(name, full_name, full_score, \
-date_added, available, test_allowed, output_only, \
-description_filename) VALUES('#{p_new}', '#{p_new}', '100', \
-'#{Time.new.strftime("%Y-%m-%d")}', '1', '1', '0', '#{p_new}.pdf');");
-	id = conn.query("SELECT id FROM problems WHERE name = \
-'#{p_new}'").fetch_row[0]
+	id = sqlgrader.insert(p_new)
 	FileUtils.mkdir_p("#{cafe_dir}/web/data/tasks/#{id}")
 	FileUtils.cp("#{s}/#{problem}.pdf", \
 "#{cafe_dir}/web/data/tasks/#{id}/#{p_new}.pdf")
 	`#{cafe_dir}/judge/scripts/import_problem #{p_new} #{s} \
 text -t 1 -m 32`
 end
-conn.close
+sqlgrader.close
