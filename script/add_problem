@@ -4,6 +4,8 @@ require 'fileutils'
 require 'mysql'
 require File.dirname(__FILE__) + '/utility.rb'
 
+__TEST__ = true
+
 def get_name(problem, dir)
 	return problem if !FileTest.exist?("#{dir}/#{problem}")
 	ex = 2
@@ -19,7 +21,7 @@ cafeprompt_dir, path_config = Utility.initial(__FILE__)
 cafe_dir = path_config['cafegrader:']
 problems = Dir[cafeprompt_dir + '/problemset/*']
 FileUtils.cd(cafe_dir + '/judge')
-sqlgrader = SqlGrader(cafe_dir)
+sqlgrader = SqlGrader.new(cafe_dir)
 problems.each do |s|
 	problem = File.basename(s)
 	p_new = get_name(problem, cafe_dir + '/judge/ev')
@@ -29,5 +31,10 @@ problems.each do |s|
 "#{cafe_dir}/web/data/tasks/#{id}/#{p_new}.pdf")
 	`#{cafe_dir}/judge/scripts/import_problem #{p_new} #{s} \
 text -t 1 -m 32`
+	if __TEST__
+		FileUtils.mkdir_p(cafeprompt_dir + "/backup")
+		FileUtils.cp_r(s, cafeprompt_dir + "/backup/#{p_new}")
+	end
+	FileUtils.remove_dir(s)
 end
 sqlgrader.close

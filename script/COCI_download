@@ -24,13 +24,12 @@ end
 def validate(info)
 	contest = info['contest:']
 	if !info.has_key?(contest + ':')
-		contest = contest.to_i
-		return false if contest < 1
+		return false if contest.to_i < 1
 		return false if info['status:'] == 'fin' &&
-						info['allcontest:'].to_i < contest
+						info['allcontest:'].to_i < contest.to_i
 		return false if info['status:'] != 'fin' &&
-						info['status:'].to_i < contest
-		contest = 'contest' + contest
+						info['status:'].to_i < contest.to_i
+		info['contest:'] = 'contest' + contest
 	else
 		return false if info[contest + ':'] != 'true'
 	end
@@ -92,6 +91,7 @@ contest = "#{ARGV[1]}"
 error if !(year =~ /^[0-9]+/)
 error if !(info = read_contest_dat(cafeprompt_dir, year, contest))
 error if !validate(info)
+contest = info["contest:"]
 download(info)
 task_path = "#{current_dir}/#{contest}_tasks.pdf"
 solution_path = "#{current_dir}/#{contest}_solutions.zip"
