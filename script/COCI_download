@@ -1,21 +1,12 @@
 #!/usr/bin/ruby
 
 require 'fileutils'
-require File.dirname(__FILE__) + '/utility.rb'
-
-def error
-	abort('Error')
-end
+require File.dirname(__FILE__) + '/graderutils.rb'
 
 def read_contest_dat(cafeprompt_dir, year, contest)
 	year_file = "#{cafeprompt_dir}/config/COCI/#{year}"
-	return nil if !FileTest.exist?(year_file)
-	data = Utility.readfile(year_file)
-	h = {}
-	data.each_line do |s|
-		words = s.split
-		h[ words[0] ] = words[1]
-	end
+	abort('No year : ' + year) if !FileTest.exist?(year_file)
+	h = GraderUtils.create_hash( GraderUtils.readfile(year_file) )
 	h['year:'] = year
 	h['contest:'] = contest
 	return h
@@ -29,6 +20,7 @@ def validate(info)
 						info['allcontest:'].to_i < contest.to_i
 		return false if info['status:'] != 'fin' &&
 						info['status:'].to_i < contest.to_i
+		# pass by ref
 		info['contest:'] = 'contest' + contest
 	else
 		return false if info[contest + ':'] != 'true'
@@ -37,25 +29,27 @@ def validate(info)
 end
 
 def wget(url)
-	sname = File.basename(url)
-	command = "wget #{url} 2>&1 | sed -u 's/.* \\([0-9]\\+%\\)\\ \
+	`#{"wget #{url} 2>&1 | sed -u 's/.* \\([0-9]\\+%\\)\\ \
 \\+\\([0-9.]\\+.\\)\\(.*\\)/\\1\\n# Downloading at \\2\\/s, ETA \\3/' \
-| zenity --width=400 --progress --title=\"Downloading #{sname}\" \
---auto-close --no-cancel"
-	`#{command}`
+| zenity --width=400 --progress --title=\"Downloading \
+#{File.basename(url)}\" --auto-close --no-cancel"}`
 end
 
 def download(info)
 	year = info['year:'].to_i
 	contest = info['contest:']
+	puts "Downloading #{year} #{contest}"
 	if info[':status' != 'finished']
 		wget("http://hsin.hr/coci/#{contest}_solutions.zip")
 		wget("http://hsin.hr/coci/#{contest}_testdata.zip")
 		wget("http://hsin.hr/coci/#{contest}_tasks.pdf")
 	else
-		wget("http://hsin.hr/coci/archive/#{year}_#{year+1}/#{contest}_solutions.zip")
-		wget("http://hsin.hr/coci/archive/#{year}_#{year+1}/#{contest}_testdata.zip")
-		wget("http://hsin.hr/coci/archive/#{year}_#{year+1}/#{contest}_tasks.pdf")
+		wget("http://hsin.hr/coci/archive/#{year}_#{year+1}/\
+#{contest}_solutions.zip")
+		wget("http://hsin.hr/coci/archive/#{year}_#{year+1}/\
+#{contest}_testdata.zip")
+		wget("http://hsin.hr/coci/archive/#{year}_#{year+1}/\
+#{contest}_tasks.pdf")
 	end
 end
 
@@ -82,15 +76,15 @@ end
 
 ########################################################################
 
-cafeprompt_dir, path_config = Utility.initial(__FILE__)
+cafeprompt_dir, path_config = GraderUtils.initial(__FILE__)
 current_dir = '/tmp/cafeprompt'
 FileUtils.mkdir_p(current_dir)
 FileUtils.cd(current_dir)
 year = "#{ARGV[0]}"
 contest = "#{ARGV[1]}"
-error if !(year =~ /^[0-9]+/)
-error if !(info = read_contest_dat(cafeprompt_dir, year, contest))
-error if !validate(info)
+abort('No year : ' + year) if !(year =~ /^[0-9]+/)
+info = read_contest_dat(cafeprompt_dir, year, contest)
+abort('No contest : ' + contest) if !validate(info)
 contest = info["contest:"]
 download(info)
 task_path = "#{current_dir}/#{contest}_tasks.pdf"
@@ -104,7 +98,7 @@ if info['sample:'] == 'yes'
 	allfiles = Dir[current_dir + '/*']
 	allfiles.each do |f|
 		if FileTest.directory?(f) && f =~ /official/
-			testdata_path = "#{current_dir}/#{f}"
+			testdata_path = f
 			break
 		end
 	end

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 setting(){
-	mkdir $current_dir/solution
-	mkdir $current_dir/problemset
-	mkdir $current_dir/config
-	mkdir $current_dir/backup
+	mkdir -p $current_dir/solution
+	mkdir -p $current_dir/problemset
+	mkdir -p $current_dir/config
+	mkdir -p $current_dir/backup
 	mv /tmp/cafe_path $current_dir/config/path
 }
 

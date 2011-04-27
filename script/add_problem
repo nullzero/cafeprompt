@@ -2,7 +2,7 @@
 
 require 'fileutils'
 require 'mysql'
-require File.dirname(__FILE__) + '/utility.rb'
+require File.dirname(__FILE__) + '/graderutils.rb'
 
 __TEST__ = true
 
@@ -17,15 +17,15 @@ end
 
 ########################################################################
 
-cafeprompt_dir, path_config = Utility.initial(__FILE__)
+cafeprompt_dir, path_config = GraderUtils.initial(__FILE__)
 cafe_dir = path_config['cafegrader:']
 problems = Dir[cafeprompt_dir + '/problemset/*']
 FileUtils.cd(cafe_dir + '/judge')
-sqlgrader = SqlGrader.new(cafe_dir)
+sql = GraderSql.new(cafe_dir)
 problems.each do |s|
 	problem = File.basename(s)
 	p_new = get_name(problem, cafe_dir + '/judge/ev')
-	id = sqlgrader.insert(p_new)
+	id = sql.insert(p_new)
 	FileUtils.mkdir_p("#{cafe_dir}/web/data/tasks/#{id}")
 	FileUtils.cp("#{s}/#{problem}.pdf", \
 "#{cafe_dir}/web/data/tasks/#{id}/#{p_new}.pdf")
@@ -37,4 +37,4 @@ text -t 1 -m 32`
 	end
 	FileUtils.remove_dir(s)
 end
-sqlgrader.close
+sql.close
