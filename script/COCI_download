@@ -39,7 +39,7 @@ def download(info)
 	year = info['year:'].to_i
 	contest = info['contest:']
 	puts "Downloading #{year} #{contest}"
-	if info[':status' != 'finished']
+	if info[':status'] != 'finished'
 		wget("http://hsin.hr/coci/#{contest}_solutions.zip")
 		wget("http://hsin.hr/coci/#{contest}_testdata.zip")
 		wget("http://hsin.hr/coci/#{contest}_tasks.pdf")
