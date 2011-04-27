@@ -89,15 +89,14 @@ contest = info["contest:"]
 download(info)
 task_path = "#{current_dir}/#{contest}_tasks.pdf"
 solution_path = "#{current_dir}/#{contest}_solutions.zip"
-FileUtils.mv(solution_path, 
-			"#{cafeprompt_dir}/solution/#{year}.#{contest}.zip")
 testdata_zip = "#{current_dir}/#{contest}_testdata.zip"
 testdata_path = nil
 `unzip #{testdata_zip}`
-if info['sample:'] == 'yes'
-	allfiles = Dir[current_dir + '/*']
+allfiles = Dir[current_dir + '/*']
+# 1) task.pdf 2) testdata.zip 3) official 4) example 5) solution.zip
+if allfiles.length == 5
 	allfiles.each do |f|
-		if FileTest.directory?(f) && f =~ /official/
+		if f =~ /^official.+/
 			testdata_path = f
 			break
 		end
@@ -105,10 +104,13 @@ if info['sample:'] == 'yes'
 else
 	testdata_path = current_dir
 end
+abort('Testdata path not exist') if !testdata_path
 allproblems = Dir[testdata_path + '/*']
 allproblems.each do |f|
 	if FileTest.directory?(f)
 		process(f, cafeprompt_dir, task_path)
 	end
 end
+FileUtils.mv(solution_path, 
+			"#{cafeprompt_dir}/solution/#{year}.#{contest}.zip")
 FileUtils.remove_dir(current_dir)
