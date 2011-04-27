@@ -53,22 +53,22 @@ def download(info)
 	end
 end
 
-def process(path, cafeprompt_dir, task_path)
-	input = Dir[path + '/*.in.*']
+def process(dir, cafeprompt_dir, task_path)
+	input = Dir[dir + '/*.in.*']
 	input.sort!
 	count = 0
 	input.each do |file|
 		count += 1
-		FileUtils.mv(file, "#{path}/#{count}.in")
+		FileUtils.mv(file, "#{dir}/#{count}.in")
 	end
-	output = Dir[path + '/*.out.*']
+	output = Dir[dir + '/*.out.*']
 	output.sort!
 	count = 0
 	output.each do |file|
 		count += 1
-		FileUtils.mv(file, "#{path}/#{count}.sol")
+		FileUtils.mv(file, "#{dir}/#{count}.sol")
 	end
-	prob_name = File.basename(path)
+	prob_name = File.basename(dir)
 	absolute_prob = "#{cafeprompt_dir}/problemset/#{prob_name}"
 	FileUtils.mv(path, absolute_prob)
 	FileUtils.cp(task_path, "#{absolute_prob}/#{prob_name}.pdf")
