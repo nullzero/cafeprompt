@@ -96,7 +96,7 @@ allfiles = Dir[current_dir + '/*']
 # 1) task.pdf 2) testdata.zip 3) official 4) example 5) solution.zip
 if allfiles.length == 5
 	allfiles.each do |f|
-		if f =~ /^official.+/
+		if File.basename(f) =~ /^official.+/
 			testdata_path = f
 			break
 		end
