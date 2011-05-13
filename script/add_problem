@@ -27,7 +27,8 @@ problems.each do |s|
 	p_new = get_name(problem, cafe_dir + '/judge/ev')
 	id = sql.insert(p_new)
 	FileUtils.mkdir_p("#{cafe_dir}/web/data/tasks/#{id}")
-	FileUtils.cp("#{s}/#{problem}.pdf", \
+	FileUtils.mv("#{s}/#{problem}.pdf", "#{s}/#{p_new}.pdf")
+	FileUtils.cp("#{s}/#{p_new}.pdf", \
 "#{cafe_dir}/web/data/tasks/#{id}/#{p_new}.pdf")
 	`#{cafe_dir}/judge/scripts/import_problem #{p_new} #{s} \
 text -t 1 -m 32`
